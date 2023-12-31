@@ -7,19 +7,8 @@
 #define WIDTH (800.00)
 #define HEIGHT (700.00)
 #define G (0.01)
-//Don't start at top of the screen offset is where the first pendulum starts on the y-axis
-#define OFFSET (300)
+#define OFFSET (300) //y-axis starting location first pendulum
 #define RADIUS (10.0)
-
-double normalize_angle(double val){
-	while (val < 0){
-		val += 2 * M_PI;
-	}
-	while (val > 2 * M_PI){
-		val -= 2 * M_PI;
-	}
-	return val;
-}
 
 typedef struct State{
 	double *ls; //lengths
@@ -30,6 +19,9 @@ typedef struct State{
 
 } State;
 
+//DRAWS THE CIRCLE ON THE BOTTOM OF THE Pendulum
+//Takes a renderer and the the bottom x(cx),y(cy) cordinates
+//of the pendulum
 static void draw_circle(SDL_Renderer *renderer, int32_t cx, int32_t cy){
 	for (int32_t dy=1; dy<= RADIUS; ++dy){
 		double dx = floor(sqrt((2.0 * RADIUS *dy) - (dy * dy)));
@@ -41,7 +33,10 @@ static void draw_circle(SDL_Renderer *renderer, int32_t cx, int32_t cy){
 
 }
 
-
+//LOGIC to update the posiiton of the pendulum
+//as well as adjust the angular velocities
+//takes the current state as a pointer
+//SOURCE: https://oguz81.github.io/DoublePendulum/
 static void update_state(State *state){
 	double num1 = -G * (2 * state->ms[0] + state->ms[1]) * sin(state->as[0]);
 	double num2 = -state->ms[1] * G * sin(state->as[0] -2 * state->as[1]);
@@ -61,13 +56,16 @@ static void update_state(State *state){
 		* state->as[1]));
 
 	double update2 = (num1_2 * (num2_2+num3_2+num4_2)) / den_2;
-
+    //UPDATE ANGULAR VELOCITY
 	state->avs[0] += update1;
 	state->avs[1] += update2;
+    //UPDATE ANGLES
 	state->as[0] += state->avs[0];
 	state->as[1] += state->avs[1];
 }
 
+//DRAW THE TRACE OF THE LOWER PENDULUMS PATH
+//Takes the renderer, canvas, texture, and the bottom x,y cordinates of the bottom pendulum
 void draw_path(SDL_Renderer *renderer, uint32_t *canvas, SDL_Texture *texture, double x, double y){
 	canvas[(int)(floor(x) * WIDTH + floor(y))] = 0x1d1d1b;
 	SDL_UpdateTexture(texture, 0, canvas, sizeof(uint32_t) * WIDTH);
@@ -76,6 +74,8 @@ void draw_path(SDL_Renderer *renderer, uint32_t *canvas, SDL_Texture *texture, d
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
 }
 
+//DRAWS THE PENDULUM TO THE WINDOW
+//takes the state the renderer and the texture
 static void draw_pen(State *state, SDL_Renderer *renderer,SDL_Texture *texture){
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderClear(renderer);
@@ -104,7 +104,16 @@ static void draw_pen(State *state, SDL_Renderer *renderer,SDL_Texture *texture){
 	SDL_RenderPresent(renderer);
 }
 
-
+//VERY DUMB WAY OF CREATING THE STATE
+////(NOTE: first position in list always represents first pendulum)
+//ls = lengths the
+// ms = mass
+// as = angles
+// avs = angular velocities
+// canvas represents the positions of the window
+// will be used to efficiently trace and render the path the pendulum has taken
+// will be using it as a texture so we don't have to constantly redraw every individual point
+// an easy way to pass it as a texture to redraw all previous paths after clearing the window
 State create_state(double l1,double l2, double m1, double m2, double a1, double a2){
 	State temp;
 	temp.ls = (double*)malloc(sizeof(double) * 2);
@@ -122,9 +131,9 @@ State create_state(double l1,double l2, double m1, double m2, double a1, double 
 	temp.canvas = (uint32_t*)malloc(sizeof(uint32_t) * WIDTH * HEIGHT);
 	memset(temp.canvas, 255, sizeof(uint32_t) * WIDTH * HEIGHT);
 	return temp;
-
 }
 
+//freeing the memory of the state struct
 void free_state(State *state){
 	free(state->ls);
 	free(state->ms);
