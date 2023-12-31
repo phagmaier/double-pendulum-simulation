@@ -1,8 +1,3 @@
-// JUST NEED TO ADD THE BALL AND THEN I JUST NEED TO 
-//ADD THE TRACING
-//GOLD: 0xFFFFD700
-//BLACK: 0xFF000000
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL.h>
@@ -11,8 +6,8 @@
 
 #define WIDTH (800.00)
 #define HEIGHT (700.00)
-//#define G (-9.8)
 #define G (0.01)
+//Don't start at top of the screen offset is where the first pendulum starts on the y-axis
 #define OFFSET (300)
 #define RADIUS (10.0)
 
@@ -26,7 +21,6 @@ double normalize_angle(double val){
 	return val;
 }
 
-//Will probably eventually have to do shit with the canvas
 typedef struct State{
 	double *ls; //lengths
 	double *ms; //masses
@@ -36,8 +30,6 @@ typedef struct State{
 
 } State;
 
-//For circle you need the end of the line x cordinate and y cordinate
-//cx is the starting point of the x axis (i think) same for cy but y-axis
 static void draw_circle(SDL_Renderer *renderer, int32_t cx, int32_t cy){
 	for (int32_t dy=1; dy<= RADIUS; ++dy){
 		double dx = floor(sqrt((2.0 * RADIUS *dy) - (dy * dy)));
@@ -46,7 +38,7 @@ static void draw_circle(SDL_Renderer *renderer, int32_t cx, int32_t cy){
 		SDL_RenderDrawLine(renderer, cx - dx, cy + dy - RADIUS, cx + dx, cy + dy - RADIUS);
 		SDL_RenderDrawLine(renderer, cx - dx, cy - dy + RADIUS, cx + dx, cy - dy + RADIUS);
 	}
-	
+
 }
 
 
@@ -54,9 +46,9 @@ static void update_state(State *state){
 	double num1 = -G * (2 * state->ms[0] + state->ms[1]) * sin(state->as[0]);
 	double num2 = -state->ms[1] * G * sin(state->as[0] -2 * state->as[1]);
 	double num3 = -2 *sin(state->as[0] - state->as[1]) * state->ms[1];
-	double num4 = state->avs[1] * state->avs[1] * state->ls[1] 
+	double num4 = state->avs[1] * state->avs[1] * state->ls[1]
 				+ state->avs[0] * state->avs[0] * state->ls[0] * cos(state->as[0] - state->as[1]);
-	double den = state->ls[0] * (2 * state->ms[0] + state->ms[1] - state->ms[1] * cos(2 * 
+	double den = state->ls[0] * (2 * state->ms[0] + state->ms[1] - state->ms[1] * cos(2 *
 		state->as[0] - 2 * state->as[1]));
 
 	double update1 = (num1 + num2 + num3 * num4) / den;
@@ -67,7 +59,7 @@ static void update_state(State *state){
 	double num4_2 = state->avs[1] * state->avs[1] * state->ls[1] * state->ms[1] * cos(state->as[0] - state->as[1]);
 	double den_2 = state->ls[1] * (2 * state->ms[0] + state->ms[1] - state->ms[1] * cos(2 * state->as[0] - 2
 		* state->as[1]));
-	
+
 	double update2 = (num1_2 * (num2_2+num3_2+num4_2)) / den_2;
 
 	state->avs[0] += update1;
@@ -77,53 +69,12 @@ static void update_state(State *state){
 }
 
 void draw_path(SDL_Renderer *renderer, uint32_t *canvas, SDL_Texture *texture, double x, double y){
-	//SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	//uint32_t *writing_pixel = &canvas[(uint32_t)(floorf(pos2.y) * WINDOW_WIDTH + floorf(pos2.x))];
-
-	//canvas[(int)(floor(x) * WIDTH + floor(y))] = 0xFFFFD700;
 	canvas[(int)(floor(x) * WIDTH + floor(y))] = 0x1d1d1b;
 	SDL_UpdateTexture(texture, 0, canvas, sizeof(uint32_t) * WIDTH);
 
 	/* draw the canvas */
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
 }
-
-
-/*
-static void draw_pen(State *state, SDL_Renderer *renderer,SDL_Texture *texture){
-	double x1_1 = (double) WIDTH/2;
-	double y1_1 = (double) OFFSET;
-	double x2_1 = x1_1 + state->ls[0] * sin(state->as[0]);
-	double y2_1 = y1_1 + state->ls[0] * cos(state->as[0]);
-
-	//SET SCREEN TO WHITE
-	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-	SDL_RenderClear(renderer);
-	
-	//MAKE SURE WE ARE DRAWING THE LINES IN BLACK
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	//SDL_RenderClear(renderer);
-	SDL_RenderDrawLine(renderer, x1_1, y1_1, x2_1, y2_1);
-
-	//NOT IMPLIMENTED YET
-	draw_circle(renderer, (uint32_t)x2_1, (uint32_t)y2_1);
-	double ballX = x1_1 + state->ls[0] * sin(state->as[0]);
-	double ballY = OFFSET + state->ls[0] * cos(state->as[0]);
-
-	double x1_2 = ballX + RADIUS * sin(state->as[0]);
-	double y1_2 = ballY + RADIUS * cos(state->as[0]);
-	double x2_2 = x1_2 + state->ls[1] * sin(state->as[1]);
-	double y2_2 = y1_2 + state->ls[1] * cos(state->as[1]);
-	
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	SDL_RenderDrawLine(renderer, x1_2, y1_2, x2_2, y2_2);
-	draw_circle(renderer, (uint32_t)x2_2, (uint32_t)y2_2);
-
-	//SDL_Renderer *renderer, uint32_t *canvas, SDL_Texture *texture, double x, double y
-	//draw_path(renderer, state->canvas, texture, ballX, ballY);
-	SDL_RenderPresent(renderer);
-}
-*/
 
 static void draw_pen(State *state, SDL_Renderer *renderer,SDL_Texture *texture){
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
@@ -184,10 +135,8 @@ void free_state(State *state){
 
 
 
-/* yes main does need to have this signature see https://stackoverflow.com/questions/11976084/why-sdl-defines-main-macro */
 int main(int argc, char *argv[])
 {
-	/* we don't need these */
 	(void)argc;
 	(void)argv;
 
@@ -230,8 +179,6 @@ int main(int argc, char *argv[])
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
 
-    //int count = 0;
-	
 	while (!quit)
 	{
 		for (SDL_Event event = { 0 }; SDL_PollEvent(&event); )
@@ -242,19 +189,9 @@ int main(int argc, char *argv[])
 					quit = 1;
 				} break;
 			}
-		/* draw to renderer */
-		//update_state(&state, renderer, texture, state.canvas);
-			//SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-			//SDL_RenderClear(renderer);
-			draw_pen(&state,renderer, texture);
+		draw_pen(&state,renderer, texture);
 			update_state(&state);
-			//if (count >= 200){
-			//	quit = 1;
-			//}
-			//SDL_Delay(16);
-			//SDL_RenderPresent(renderer);
-			//count++;
-	} 
+	}
 
 
 	/* cleanup SDL and free memory */
@@ -265,7 +202,4 @@ int main(int argc, char *argv[])
 	SDL_Quit();
 	return 0;
 }
-
-
 //gcc main.c -o runthis -I /usr/local/include/SDL2 -L /usr/local/lib -lSDL2
-

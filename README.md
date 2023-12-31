@@ -6,5 +6,5 @@ SDL2 must be downloaded
 ## Summary
 Will explaina and provide later
 
-## PICTURE
+## PIC
 ![Pendulum](pen.png)
