@@ -67,7 +67,8 @@ static void update_state(State *state){
 //DRAW THE TRACE OF THE LOWER PENDULUMS PATH
 //Takes the renderer, canvas, texture, and the bottom x,y cordinates of the bottom pendulum
 void draw_path(SDL_Renderer *renderer, uint32_t *canvas, SDL_Texture *texture, double x, double y){
-	canvas[(int)(floor(x) * WIDTH + floor(y))] = 0x1d1d1b;
+	//canvas[(int)(floor(x) * WIDTH + floor(y))] = 0x1d1d1b00;
+    canvas[(int)(floor(x) * WIDTH + floor(y))] = 0x00000000;
 	SDL_UpdateTexture(texture, 0, canvas, sizeof(uint32_t) * WIDTH);
 
 	/* draw the canvas */
@@ -80,7 +81,7 @@ static void draw_pen(State *state, SDL_Renderer *renderer,SDL_Texture *texture){
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 	SDL_RenderClear(renderer);
 
-	double x1_1 = (double) WIDTH/2;
+    double x1_1 = (double) WIDTH/2;
 	double y1_1 = (double) OFFSET;
 	double x2_1 = x1_1 + state->ls[0] * sin(state->as[0]);
 	double y2_1 = y1_1 + state->ls[0] * cos(state->as[0]);
@@ -183,8 +184,8 @@ int main(int argc, char *argv[])
 
 #undef create_SDL
 	int quit = 0;
-	//State state = create_state(100.0,100.0,5.0,10.0,45.0,90.0);
 	State state = create_state(150.0,150.0,20.0,20.0,180,90.0);
+    //State state = create_state(150.0,150.0,20.0,20.0,180,90.0);
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);
 
